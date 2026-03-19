@@ -3,7 +3,7 @@
 
 import { jsonResponse, errorResponse, corsHeaders } from '../lib/scoring.js';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const BASE = (req) => {
   const url = new URL(req.url);
