@@ -3,8 +3,7 @@
 
 import { jsonResponse, errorResponse, corsHeaders } from '../lib/scoring.js';
 
-export const config = { runtime: 'edge' };
-
+export const config = { runtime: 'nodejs' };
 async function callClaude(messages, system, maxTokens = 800) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
