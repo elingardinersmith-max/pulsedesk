@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseDesk — Media Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0b0d;--bg2:#111318;--bg3:#1a1d24;--bg4:#22262f;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+    --text:#e8eaf0;--text2:#8b90a0;--text3:#555a6a;
+    --accent:#5b6af0;--accent2:#7c8af5;
+    --red:#e8524a;--amber:#e8a23a;--green:#3dc97a;--teal:#2ec4b6;
+    --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;overflow-x:hidden;}
+  .app{display:flex;height:100vh;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+  .sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+  .logo-mark{display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:18px;height:18px;fill:none;stroke:white;stroke-width:2;}
+  .logo-text{font-size:15px;font-weight:600;letter-spacing:-0.3px;}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:1px;font-family:var(--mono);}
+  .nav-section{padding:12px 10px 8px;}
+  .nav-label{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);padding:0 8px;margin-bottom:4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.15s;border:none;background:none;width:100%;text-align:left;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(91,106,240,0.15);color:var(--accent2);}
+  .nav-item svg{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active svg{opacity:1;}
+  .nav-badge{margin-left:auto;background:var(--red);color:white;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;}
+  .nav-badge.amber{background:var(--amber);}
+  .sidebar-footer{margin-top:auto;padding:12px 10px;border-top:1px solid var(--border);}
+  .user-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;}
+  .user-row:hover{background:var(--bg3);}
+  .avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+  .user-name{font-size:13px;}
+  .user-role{font-size:11px;color:var(--text3);}
+  .role-badge{margin-left:auto;font-size:10px;color:var(--accent2);background:rgba(91,106,240,0.15);padding:2px 6px;border-radius:4px;}
+  .topbar{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;background:var(--bg);position:sticky;top:0;z-index:10;}
+  .topbar-title{font-size:16px;font-weight:600;letter-spacing:-0.3px;}
+  .topbar-sub{font-size:12px;color:var(--text3);font-family:var(--mono);}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:var(--font);cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;font-weight:500;}
+  .btn:hover{background:var(--bg4);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:white;}
+  .btn-primary:hover{background:var(--accent2);}
+  .btn-sm{padding:5px 10px;font-size:12px;}
+  .scan-pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+  .content{padding:24px;flex:1;}
+  .page{display:none;}
+  .page.active{display:block;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+  .stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .stat-val{font-size:28px;font-weight:600;letter-spacing:-1px;}
+  .stat-delta{font-size:12px;color:var(--text3);margin-top:4px;}
+  .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .filter-pill{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);font-size:12px;font-family:var(--font);cursor:pointer;transition:all 0.15s;}
+  .filter-pill.active{background:var(--accent);border-color:var(--accent);color:white;}
+  .filter-pill:hover:not(.active){border-color:var(--border2);color:var(--text);}
+  .search-box{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;}
+  .search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:var(--font);width:180px;}
+  .search-box input::placeholder{color:var(--text3);}
+  .story-list{display:flex;flex-direction:column;gap:10px;}
+  .story-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;cursor:pointer;transition:all 0.15s;display:flex;gap:16px;align-items:flex-start;}
+  .story-card:hover{border-color:var(--border2);background:var(--bg3);}
+  .story-card.selected{border-color:var(--accent);background:rgba(91,106,240,0.05);}
+  .priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+  .p1{background:var(--red);box-shadow:0 0 8px var(--red);}
+  .p2{background:var(--amber);}
+  .p3{background:var(--green);}
+  .story-body{flex:1;min-width:0;}
+  .story-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;}
+  .story-title{font-size:14px;font-weight:500;line-height:1.4;flex:1;}
+  .priority-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;letter-spacing:0.3px;}
+  .badge-p1{background:rgba(232,82,74,0.2);color:var(--red);}
+  .badge-p2{background:rgba(232,162,58,0.2);color:var(--amber);}
+  .badge-p3{background:rgba(61,201,122,0.2);color:var(--green);}
+  .story-meta{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--text3);}
+  .story-entities{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+  .entity-tag{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--bg4);color:var(--text2);border:1px solid var(--border);}
+  .source-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+  .reach-num{font-size:16px;font-weight:600;font-family:var(--mono);}
+  .reach-label{font-size:10px;color:var(--text3);}
+  .mini-avatar{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;}
+  .assigned-to{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--text3);}
+  .story-detail{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-top:16px;}
+  .detail-tabs{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:20px;}
+  .detail-tab{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;color:var(--text2);transition:all 0.15s;}
+  .detail-tab.active{background:var(--bg2);color:var(--text);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+  .sentiment-bar{display:flex;border-radius:6px;overflow:hidden;height:8px;margin:8px 0;}
+  .sent-pos{background:var(--green);}
+  .sent-neu{background:var(--text3);}
+  .sent-neg{background:var(--red);}
+  .sentiment-legend{display:flex;gap:16px;font-size:11px;color:var(--text2);}
+  .sent-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;}
+  .theme-list{display:flex;flex-direction:column;gap:8px;}
+  .theme-item{display:flex;align-items:center;gap:8px;}
+  .theme-name{font-size:13px;min-width:140px;}
+  .theme-bar-wrap{flex:1;height:4px;background:var(--bg4);border-radius:2px;}
+  .theme-bar{height:100%;border-radius:2px;background:var(--accent);}
+  .theme-pct{font-size:12px;color:var(--text3);font-family:var(--mono);min-width:32px;text-align:right;}
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .metric-box{background:var(--bg3);border-radius:var(--radius);padding:12px;text-align:center;border:1px solid var(--border);}
+  .metric-val{font-size:22px;font-weight:600;font-family:var(--mono);}
+  .metric-lbl{font-size:11px;color:var(--text3);margin-top:4px;}
+  .ai-panel{background:var(--bg3);border-radius:var(--radius);padding:14px;margin-top:12px;border:1px solid var(--border);}
+  .ai-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12px;font-weight:600;color:var(--accent2);}
+  .ai-thinking{display:flex;gap:4px;align-items:center;}
+  .ai-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:bounce 1.2s infinite;}
+  .ai-dot:nth-child(2){animation-delay:0.2s;}
+  .ai-dot:nth-child(3){animation-delay:0.4s;}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+  .ai-response{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;}
+  .ai-input-row{display:flex;gap:8px;margin-top:10px;}
+  .ai-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;}
+  .ai-input:focus{border-color:var(--accent);}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
+  .loading-state{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--text3);gap:10px;font-size:13px;}
+  .two-col{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;}
+  .section-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .comment-card{background:var(--bg3);border-radius:var(--radius);padding:14px;border:1px solid var(--border);}
+  .comment-card-title{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);font-weight:600;margin-bottom:12px;}
+  .comment-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  .influencer-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .influencer-item:last-child{border-bottom:none;}
+  .inf-handle{font-size:13px;font-family:var(--mono);color:var(--accent2);}
+  .inf-sent{font-size:11px;padding:2px 7px;border-radius:4px;}
+  .sent-neg-badge{background:rgba(232,82,74,0.2);color:var(--red);}
+  .sent-pos-badge{background:rgba(61,201,122,0.2);color:var(--green);}
+  .comparison-toggle{display:inline-flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:16px;}
+  .comp-btn{padding:6px 14px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text2);transition:all 0.15s;}
+  .comp-btn.active{background:var(--bg2);color:var(--text);}
+  .digest-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:740px;}
+  .digest-section{margin-bottom:20px;}
+  .digest-section-title{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent2);font-weight:600;margin-bottom:10px;}
+  .digest-body{font-size:14px;line-height:1.8;color:var(--text);}
+  .digest-highlight{background:rgba(91,106,240,0.1);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px;}
+  .notif-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:8px;}
+  .notif-item.unread{border-left:3px solid var(--accent);}
+  .notif-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .entity-table{width:100%;border-collapse:collapse;}
+  .entity-table th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);}
+  .entity-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .entity-table tr:hover td{background:var(--bg3);}
+  .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .team-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+  .scan-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:200% 100%;animation:scan 2s linear infinite;}
+  @keyframes scan{0%{background-position:-100% 0;}100%{background-position:200% 0;}}
+  .error-banner{background:rgba(232,82,74,0.1);border:1px solid rgba(232,82,74,0.3);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:12px;}
+  .source-indicators{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .source-indicator{font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--border);color:var(--text3);}
+  .source-indicator.active{border-color:var(--green);color:var(--green);background:rgba(61,201,122,0.08);}
+  .source-indicator.error{border-color:var(--red);color:var(--red);}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <div class="logo-text">PulseDesk</div>
+          <div class="logo-sub">Media Intelligence</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Monitor</div>
+      <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard<span class="nav-badge" id="badge-p1">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('stories',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        All Stories<span class="nav-badge amber" id="badge-total">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('comments',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Comment Analysis
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Reports</div>
+      <button class="nav-item" onclick="showPage('digest',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Daily Digest
+      </button>
+      <button class="nav-item" onclick="showPage('notifications',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications<span class="nav-badge" id="badge-notif" style="display:none">!</span>
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Config</div>
+      <button class="nav-item" onclick="showPage('team',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Team &amp; Shifts
+      </button>
+      <button class="nav-item" onclick="showPage('entities',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Tracked Entities
+      </button>
+      <button class="nav-item" onclick="window.location.href='/settings'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        API & Settings
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar" style="background:#534AB7">SR</div>
+        <div><div class="user-name">Team Lead</div><div class="user-role">PulseDesk</div></div>
+        <div class="role-badge">Lead</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="scan-bar"></div>
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-sub" id="last-scan-time">Never scanned — click Scan Now</div>
+        </div>
+        <div class="topbar-right">
+          <div class="scan-pulse" id="scan-indicator" style="background:var(--text3)"></div>
+          <span style="font-size:12px;color:var(--text3)" id="scan-status-text">Idle</span>
+          <button class="btn btn-primary" id="scan-btn" onclick="triggerScan()">▶ Scan Now</button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="source-indicators" class="source-indicators"></div>
+        <div id="scan-error" style="display:none" class="error-banner"></div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>P1 Critical</div>
+            <div class="stat-val" id="stat-p1" style="color:var(--red)">—</div>
+            <div class="stat-delta" id="stat-p1-delta">scan to update</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Stories</div>
+            <div class="stat-val" id="stat-total">—</div>
+            <div class="stat-delta" id="stat-sources-count">0 sources active</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Sentiment</div>
+            <div class="stat-val" id="stat-sentiment" style="color:var(--amber)">—</div>
+            <div class="stat-delta" id="stat-sentiment-label">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Reach</div>
+            <div class="stat-val" id="stat-reach">—</div>
+            <div class="stat-delta">estimated across all stories</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div>
+            <div class="section-title">🔴 P1 Critical</div>
+            <div id="dash-p1" class="story-list"><div class="empty-state" style="padding:24px">Run a scan to see stories</div></div>
+            <div class="section-title" style="margin-top:20px">🟡 P2 Monitor</div>
+            <div id="dash-p2" class="story-list"></div>
+          </div>
+          <div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;">
+              <div class="section-title">Sentiment Breakdown</div>
+              <div class="sentiment-bar" id="dash-sent-bar">
+                <div class="sent-pos" style="width:33%"></div>
+                <div class="sent-neu" style="width:34%"></div>
+                <div class="sent-neg" style="width:33%"></div>
+              </div>
+              <div class="sentiment-legend" id="dash-sent-legend">
+                <div><span class="sent-dot" style="background:var(--green)"></span>—</div>
+                <div><span class="sent-dot" style="background:var(--text3)"></span>—</div>
+                <div><span class="sent-dot" style="background:var(--red)"></span>—</div>
+              </div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;">
+              <div class="section-title">Top Entities Today</div>
+              <div id="dash-entities" style="font-size:13px;color:var(--text3)">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL STORIES -->
+    <div id="page-stories" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">All Stories</div>
+          <div class="topbar-sub" id="stories-count-label">—</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn" onclick="showPage('dashboard'); triggerScan()">↻ Refresh</button>
+          <button class="btn btn-primary" onclick="exportPDF()">↓ Export PDF</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="filter-bar">
+          <button class="filter-pill active" onclick="filterStories('all',this)">All</button>
+          <button class="filter-pill" onclick="filterStories('P1',this)">P1 Critical</button>
+          <button class="filter-pill" onclick="filterStories('P2',this)">P2 Monitor</button>
+          <button class="filter-pill" onclick="filterStories('P3',this)">P3 Routine</button>
+          <button class="filter-pill" onclick="filterStories('newsapi',this)">NewsAPI</button>
+          <button class="filter-pill" onclick="filterStories('gnews',this)">Google News</button>
+          <button class="filter-pill" onclick="filterStories('reddit',this)">Reddit</button>
+          <button class="filter-pill" onclick="filterStories('nitter',this)">X/Twitter</button>
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search stories..." oninput="searchStories(this.value)">
+          </div>
+        </div>
+        <div id="all-stories-list" class="story-list"></div>
+        <div id="story-detail-panel"></div>
+      </div>
+    </div>
+
+    <!-- COMMENT ANALYSIS -->
+    <div id="page-comments" class="page">
+      <div class="topbar">
+        <div><div class="topbar-title">Comment Analysis</div><div class="topbar-sub">Select a story to load comments</div></div>
+      </div>
+      <div class="content">
+        <div style="margin-bottom:16px">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Select story to analyse:</div>
+          <select id="comment-story-select" onchange="loadComments()" style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font);width:100%;max-width:500px;outline:none;">
+            <option value="">— Run a scan first, then select a story —</option>
+          </select>
+        </div>
+        <div id="comments-content">
+          <div class="empty-state">Select a story above to load and analyse its comments</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIGEST -->
+    <div id="page-digest" class="page">
+      <div class="topbar">
+        <div><div class="topbar-title">Daily Digest</div><div class="topbar-sub">AI-generated briefing</div></div>
+        <div class="topbar-right">
+          <button class="btn" onclick="generateDigest()">↻ Generate</button>
+          <button class="btn btn-primary" onclick="exportPDF()">↓ Export PDF</button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="digest-output">
+          <div class="empty-state">Click Generate to create today's AI briefing</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="page-notifications" class="page">
+      <div class="topbar">
+        <div><div class="topbar-title">Notifications</div></div>
+        <div class="topbar-right"><a href="/settings#notifications" class="btn">Configure Rules</a></div>
+      </div>
+      <div class="content">
+        <div id="notif-list"><div class="empty-state">No notifications yet — run a scan</div></div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div id="page-team" class="page">
+      <div class="topbar">
+        <div><div class="topbar-title">Team &amp; Shifts</div></div>
+        <div class="topbar-right"><a href="/settings#team" class="btn btn-primary">Manage Team</a></div>
+      </div>
+      <div class="content"><div id="team-grid" class="team-grid"></div></div>
+    </div>
+
+    <!-- ENTITIES -->
+    <div id="page-entities" class="page">
+      <div class="topbar">
+        <div><div class="topbar-title">Tracked Entities</div><div class="topbar-sub" id="entities-count">—</div></div>
+        <div class="topbar-right"><a href="/settings#entities" class="btn btn-primary">+ Add Entity</a></div>
+      </div>
+      <div class="content">
+        <table class="entity-table">
+          <thead><tr><th>Entity</th><th>Type</th><th>Importance</th><th>Stories (this scan)</th><th>Status</th></tr></thead>
+          <tbody id="entity-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────
+let ALL_STORIES = [];
+let ENTITIES = [];
+let TEAM = [];
+let CURRENT_FILTER = 'all';
+let CURRENT_SEARCH = '';
+let SCAN_INTERVAL_ID = null;
+let NOTIFICATIONS = [];
+
+const API = ''; // Same origin
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+async function init() {
+  await loadEntities();
+  await loadTeam();
+  setupAutoScan();
+}
+
+async function loadEntities() {
+  try {
+    const res = await fetch(`${API}/api/entities?resource=entities&action=list`);
+    if (!res.ok) return;
+    const data = await res.json();
+    ENTITIES = data.entities || [];
+    renderEntityTable();
+    document.getElementById('entities-count').textContent = `${ENTITIES.length} entities tracked`;
+  } catch (e) { console.warn('Could not load entities:', e.message); }
+}
+
+async function loadTeam() {
+  try {
+    const res = await fetch(`${API}/api/entities?resource=team&action=list`);
+    if (!res.ok) return;
+    const data = await res.json();
+    TEAM = data.team || [];
+    renderTeam();
+  } catch (e) { console.warn('Could not load team:', e.message); }
+}
+
+function setupAutoScan() {
+  // Auto-scan every 15 minutes
+  if (SCAN_INTERVAL_ID) clearInterval(SCAN_INTERVAL_ID);
+  SCAN_INTERVAL_ID = setInterval(triggerScan, 15 * 60 * 1000);
+}
+
+// ─── SCAN ─────────────────────────────────────────────────────────────
+async function triggerScan() {
+  const btn = document.getElementById('scan-btn');
+  const indicator = document.getElementById('scan-indicator');
+  const statusText = document.getElementById('scan-status-text');
+
+  btn.disabled = true;
+  btn.textContent = '⟳ Scanning...';
+  indicator.style.background = 'var(--amber)';
+  statusText.style.color = 'var(--amber)';
+  statusText.textContent = 'Scanning';
+  document.getElementById('scan-error').style.display = 'none';
+
+  try {
+    const highImportance = ENTITIES.filter(e => e.importance >= 4).map(e => e.name);
+    const params = new URLSearchParams({
+      entities: JSON.stringify(ENTITIES),
+      highImportance: JSON.stringify(highImportance),
+      sources: 'newsapi,gnews,reddit,twitter'
+    });
+
+    const res = await fetch(`${API}/api/scan?${params}`);
+    if (!res.ok) throw new Error(`Scan failed: HTTP ${res.status}`);
+    const data = await res.json();
+
+    ALL_STORIES = data.stories || [];
+
+    // Update UI
+    updateStats(data);
+    updateSourceIndicators(data.sourceStats || {});
+    renderDashboardStories();
+    renderAllStories();
+    updateCommentSelect();
+    checkNotifications(ALL_STORIES);
+    autoAssignStories();
+
+    const now = new Date();
+    document.getElementById('last-scan-time').textContent =
+      `Last scan: ${now.toLocaleTimeString()} · ${ALL_STORIES.length} stories found`;
+
+    indicator.style.background = 'var(--green)';
+    statusText.style.color = 'var(--green)';
+    statusText.textContent = 'Live';
+
+  } catch (e) {
+    document.getElementById('scan-error').style.display = 'block';
+    document.getElementById('scan-error').textContent = `Scan error: ${e.message}. Check API keys in Settings.`;
+    indicator.style.background = 'var(--red)';
+    statusText.style.color = 'var(--red)';
+    statusText.textContent = 'Error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '▶ Scan Now';
+  }
+}
+
+function updateStats(data) {
+  const stories = data.stories || [];
+  const p1Count = stories.filter(s => s.priority === 'P1').length;
+  const totalReach = stories.reduce((a, s) => a + (s.reach || 0), 0);
+  const avgSent = stories.length ? stories.reduce((a, s) => a + (s.sentiment || 0), 0) / stories.length : 0;
+  const posCount = stories.filter(s => s.sentiment > 0.1).length;
+  const negCount = stories.filter(s => s.sentiment < -0.1).length;
+  const neuCount = stories.length - posCount - negCount;
+
+  document.getElementById('stat-p1').textContent = p1Count;
+  document.getElementById('stat-total').textContent = stories.length;
+  document.getElementById('stat-sentiment').textContent = avgSent.toFixed(2);
+  document.getElementById('stat-sentiment').style.color = avgSent < -0.2 ? 'var(--red)' : avgSent < 0 ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('stat-sentiment-label').textContent = avgSent < -0.3 ? 'trending negative' : avgSent < 0 ? 'mildly negative' : 'neutral/positive';
+  document.getElementById('stat-reach').textContent = fmtReach(totalReach);
+  document.getElementById('badge-p1').textContent = p1Count;
+  document.getElementById('badge-total').textContent = stories.length;
+
+  // Sentiment bar
+  if (stories.length > 0) {
+    const pp = Math.round(posCount / stories.length * 100);
+    const np = Math.round(neuCount / stories.length * 100);
+    const ngp = 100 - pp - np;
+    document.getElementById('dash-sent-bar').innerHTML = `
+      <div class="sent-pos" style="width:${pp}%"></div>
+      <div class="sent-neu" style="width:${np}%"></div>
+      <div class="sent-neg" style="width:${ngp}%"></div>`;
+    document.getElementById('dash-sent-legend').innerHTML = `
+      <div><span class="sent-dot" style="background:var(--green)"></span>Positive ${pp}%</div>
+      <div><span class="sent-dot" style="background:var(--text3)"></span>Neutral ${np}%</div>
+      <div><span class="sent-dot" style="background:var(--red)"></span>Negative ${ngp}%</div>`;
+  }
+
+  // Top entities
+  const entFreq = {};
+  for (const s of stories) for (const e of (s.entities || [])) entFreq[e] = (entFreq[e] || 0) + 1;
+  const topEnts = Object.entries(entFreq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('dash-entities').innerHTML = topEnts.length
+    ? topEnts.map(([name, count]) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${name}</span><span style="color:var(--text3);font-family:var(--mono)">${count} stories</span></div>`).join('')
+    : '<div style="color:var(--text3)">No entities found in stories</div>';
+}
+
+function updateSourceIndicators(stats) {
+  const el = document.getElementById('source-indicators');
+  const sourceNames = { newsapi: 'NewsAPI', gnews: 'Google News', reddit: 'Reddit', nitter: 'X/Nitter', twitter: 'X/Twitter' };
+  el.innerHTML = Object.entries(stats).map(([src, info]) => {
+    const cls = info.error ? 'error' : 'active';
+    const name = sourceNames[src] || src;
+    return `<div class="source-indicator ${cls}">${name}: ${info.error ? '✗ ' + info.error : '✓ ' + info.count + ' stories'}</div>`;
+  }).join('') || '<div class="source-indicator">No source data yet</div>';
+}
+
+// ─── STORY RENDERING ──────────────────────────────────────────────────
+
+function fmtReach(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000) return Math.round(n/1000)+'K';
+  return n.toString();
+}
+
+function sentColor(s) {
+  if (s < -0.3) return 'var(--red)';
+  if (s < 0) return 'var(--amber)';
+  return 'var(--green)';
+}
+
+const COLORS = ['#534AB7','#0F6E56','#993C1D','#185FA5','#3B6D11','#854F0B','#993556','#0C447C'];
+function assignColor(story, idx) {
+  return COLORS[idx % COLORS.length];
+}
+
+function autoAssignStories() {
+  const onShift = TEAM.filter(m => {
+    if (!m.shiftStart || !m.shiftEnd) return m.onShift;
+    const now = new Date();
+    const [sh, sm] = m.shiftStart.split(':').map(Number);
+    const [eh, em] = m.shiftEnd.split(':').map(Number);
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const startMins = sh * 60 + sm;
+    const endMins = eh * 60 + em;
+    return endMins > startMins ? nowMins >= startMins && nowMins < endMins : nowMins >= startMins || nowMins < endMins;
+  });
+
+  if (onShift.length === 0) return;
+  ALL_STORIES.forEach((story, idx) => {
+    if (!story._assigned) {
+      story._assigned = onShift[idx % onShift.length];
+      story._assignedColor = COLORS[onShift.indexOf(story._assigned) % COLORS.length];
+    }
+  });
+}
+
+function storyCard(s, idx) {
+  const initials = s._assigned ? s._assigned.name.split(' ').map(x=>x[0]).join('') : '?';
+  const color = s._assignedColor || COLORS[idx % COLORS.length];
+  const sentLabel = s.sentiment < -0.3 ? '↘' : s.sentiment < 0 ? '→' : '↗';
+  return `<div class="story-card" onclick="selectStory('${s.id}')" id="card-${s.id.replace(/[^a-z0-9]/gi,'_')}">
+    <div class="priority-dot ${s.priority?.toLowerCase() || 'p3'}"></div>
+    <div class="story-body">
+      <div class="story-header">
+        <div class="story-title">${s.title}</div>
+        <div class="priority-badge badge-${s.priority?.toLowerCase() || 'p3'}">${s.priority || 'P3'}</div>
+      </div>
+      <div class="story-meta">
+        <span class="source-badge">${s.sourceName || s.source}</span>
+        <span>·</span>
+        <span>${s.publishedAt ? new Date(s.publishedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '—'}</span>
+        ${s.commentCount != null ? `<span>· ${s.commentCount} comments</span>` : ''}
+        <span style="color:${sentColor(s.sentiment || 0)}">${sentLabel} ${(s.sentiment || 0).toFixed(2)}</span>
+        <div style="margin-left:auto;text-align:right">
+          <div class="reach-num">${fmtReach(s.reach || 0)}</div>
+          <div class="reach-label">reach</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <div class="story-entities">${(s.entities||[]).map(e=>`<span class="entity-tag">${e}</span>`).join('')}</div>
+        ${s._assigned ? `<div class="assigned-to"><div class="mini-avatar" style="background:${color}">${initials}</div>${s._assigned.name}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDashboardStories() {
+  const p1 = ALL_STORIES.filter(s => s.priority === 'P1').slice(0, 5);
+  const p2 = ALL_STORIES.filter(s => s.priority === 'P2').slice(0, 3);
+  document.getElementById('dash-p1').innerHTML = p1.length
+    ? p1.map((s,i) => storyCard(s,i)).join('')
+    : '<div class="empty-state" style="padding:20px;color:var(--green)">✓ No P1 critical stories</div>';
+  document.getElementById('dash-p2').innerHTML = p2.map((s,i) => storyCard(s,i+100)).join('');
+}
+
+function renderAllStories() {
+  let list = ALL_STORIES;
+  if (CURRENT_FILTER !== 'all') {
+    if (['P1','P2','P3'].includes(CURRENT_FILTER)) list = list.filter(s => s.priority === CURRENT_FILTER);
+    else list = list.filter(s => s.source === CURRENT_FILTER);
+  }
+  if (CURRENT_SEARCH) {
+    const q = CURRENT_SEARCH.toLowerCase();
+    list = list.filter(s => s.title?.toLowerCase().includes(q) || (s.entities||[]).some(e=>e.toLowerCase().includes(q)) || s.sourceName?.toLowerCase().includes(q));
+  }
+  document.getElementById('stories-count-label').textContent = `${list.length} of ${ALL_STORIES.length} stories`;
+  document.getElementById('all-stories-list').innerHTML = list.length
+    ? list.map((s,i) => storyCard(s,i)).join('')
+    : '<div class="empty-state">No stories match this filter</div>';
+}
+
+function filterStories(f, el) {
+  CURRENT_FILTER = f;
+  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderAllStories();
+}
+
+function searchStories(q) { CURRENT_SEARCH = q; renderAllStories(); }
+
+// ─── STORY DETAIL ─────────────────────────────────────────────────────
+
+let selectedStoryId = null;
+
+function selectStory(id) {
+  selectedStoryId = id;
+  document.querySelectorAll('.story-card').forEach(c=>c.classList.remove('selected'));
+  const safeId = id.replace(/[^a-z0-9]/gi,'_');
+  document.querySelectorAll(`[id="card-${safeId}"]`).forEach(c=>c.classList.add('selected'));
+  const s = ALL_STORIES.find(x=>x.id===id);
+  if (!s) return;
+  const panel = document.getElementById('story-detail-panel');
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <div class="story-detail">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:16px">
+        <div>
+          <div style="font-size:15px;font-weight:600;line-height:1.4;margin-bottom:6px">${s.title}</div>
+          <a href="${s.url}" target="_blank" style="font-size:12px;color:var(--accent2);text-decoration:none">${s.url?.slice(0,60)}... ↗</a>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-sm" onclick="overridePriority('${id}')">Override Priority</button>
+          <button class="btn btn-primary btn-sm" onclick="aiAnalyzeStory('${id}')">✦ AI Analysis</button>
+        </div>
+      </div>
+      <div class="detail-tabs">
+        <div class="detail-tab active" onclick="switchTab('overview',this)">Overview</div>
+        <div class="detail-tab" onclick="switchTab('scoring',this)">Scoring</div>
+        <div class="detail-tab" onclick="switchTab('log',this)">Action Log</div>
+      </div>
+      <div id="tab-overview" class="tab-content active">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+          <div class="comment-card" style="text-align:center"><div style="font-size:20px;font-weight:600;color:${sentColor(s.sentiment||0)};font-family:var(--mono)">${(s.sentiment||0).toFixed(2)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Sentiment</div></div>
+          <div class="comment-card" style="text-align:center"><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${fmtReach(s.reach||0)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Reach</div></div>
+          <div class="comment-card" style="text-align:center"><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${s.commentCount ?? '—'}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Comments</div></div>
+          <div class="comment-card" style="text-align:center"><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${s.score || '—'}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Priority Score</div></div>
+        </div>
+        ${s.description ? `<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:12px">${s.description}</div>` : ''}
+        <div id="ai-story-panel"></div>
+      </div>
+      <div id="tab-scoring" class="tab-content">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Score: <strong style="color:var(--text)">${s.score || 0}/100</strong> → <strong style="color:var(--text)">${s.priority || 'P3'}</strong></div>
+        ${(s.scoreReasons||[]).map(r=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--green)">+</span>${r}</div>`).join('')}
+      </div>
+      <div id="tab-log" class="tab-content">
+        <div style="font-size:13px;color:var(--text2);line-height:2">
+          <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3);font-family:var(--mono);font-size:11px">${new Date().toLocaleTimeString()}</span><span style="color:var(--accent2)">System</span><span>Story detected via ${s.source}</span></div>
+          <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3);font-family:var(--mono);font-size:11px">${new Date().toLocaleTimeString()}</span><span style="color:var(--accent2)">System</span><span>Priority set to ${s.priority} (score: ${s.score})</span></div>
+          ${s._assigned ? `<div style="display:flex;gap:10px;padding:8px 0"><span style="color:var(--text3);font-family:var(--mono);font-size:11px">${new Date().toLocaleTimeString()}</span><span style="color:var(--accent2)">System</span><span>Auto-assigned to ${s._assigned.name}</span></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+async function aiAnalyzeStory(id) {
+  const s = ALL_STORIES.find(x=>x.id===id);
+  if (!s) return;
+  const panel = document.getElementById('ai-story-panel');
+  panel.innerHTML = `<div class="ai-panel"><div class="ai-header"><span>✦ PulseDesk AI</span><div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div><div class="ai-response" style="color:var(--text3)">Analysing...</div></div>`;
+
+  try {
+    const res = await fetch(`${API}/api/analyse?mode=story`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ story: s, entities: ENTITIES })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    panel.innerHTML = `<div class="ai-panel">
+      <div class="ai-header">✦ PulseDesk AI — Story Analysis</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="comment-card"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Risk Level</div><div style="font-size:14px;font-weight:600;color:${data.riskLevel==='critical'?'var(--red)':data.riskLevel==='high'?'var(--amber)':'var(--green)'}">${data.riskLevel?.toUpperCase()}</div></div>
+        <div class="comment-card"><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Response Window</div><div style="font-size:13px;font-weight:500">${data.urgencyWindow || '—'}</div></div>
+      </div>
+      <div class="ai-response">${data.summary}\n\n<strong>Key Risk/Opportunity:</strong> ${data.keyRisk}\n\n<strong>Recommended Action:</strong> ${data.recommendedAction}\n\n<strong>Tone:</strong> ${data.suggestedTone}</div>
+      ${data.themes?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">${data.themes.map(t=>`<span style="font-size:11px;padding:3px 8px;border-radius:12px;background:rgba(91,106,240,0.15);color:var(--accent2)">${t}</span>`).join('')}</div>` : ''}
+      <div class="ai-input-row">
+        <input class="ai-input" id="ai-chat-input-${id.slice(0,8)}" type="text" placeholder="Ask a follow-up..." onkeydown="if(event.key==='Enter')aiChat(this,'${id}')">
+        <button class="btn" onclick="aiChat(document.getElementById('ai-chat-input-${id.slice(0,8)}'),'${id}')">Ask ↗</button>
+      </div>
+    </div>`;
+  } catch(e) {
+    panel.innerHTML = `<div class="ai-panel"><div class="ai-response" style="color:var(--red)">AI analysis failed: ${e.message}. Check your Anthropic API key in Settings.</div></div>`;
+  }
+}
+
+async function aiChat(input, storyId) {
+  const q = input.value.trim();
+  if (!q) return;
+  const s = ALL_STORIES.find(x=>x.id===storyId);
+  input.value = '';
+  const panel = document.getElementById('ai-story-panel');
+  const resp = panel.querySelector('.ai-response');
+  if (resp) resp.textContent = 'Thinking...';
+
+  try {
+    const res = await fetch(`${API}/api/analyse?mode=chat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message: `Story context: "${s?.title}" (${s?.sourceName}, sentiment ${s?.sentiment?.toFixed(2)}). Question: ${q}` })
+    });
+    const data = await res.json();
+    if (resp) resp.textContent = data.response || data.error || 'No response';
+  } catch(e) {
+    if (resp) resp.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ─── COMMENTS ─────────────────────────────────────────────────────────
+
+function updateCommentSelect() {
+  const sel = document.getElementById('comment-story-select');
+  sel.innerHTML = '<option value="">— Select a story —</option>' +
+    ALL_STORIES.filter(s=>s.commentCount > 0 || s.source==='reddit' || s.externalUrl).map(s =>
+      `<option value="${s.id}">[${s.priority}] ${s.title.slice(0,80)}</option>`
+    ).join('');
+}
+
+async function loadComments() {
+  const storyId = document.getElementById('comment-story-select').value;
+  if (!storyId) return;
+  const story = ALL_STORIES.find(s=>s.id===storyId);
+  if (!story) return;
+
+  const container = document.getElementById('comments-content');
+  container.innerHTML = '<div class="loading-state"><div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>Loading comments...</div>';
+
+  try {
+    let comments = [];
+
+    // Reddit comments
+    if (story.source === 'reddit' && story.redditPostId && story.subreddit) {
+      const res = await fetch(`${API}/api/sources/reddit?mode=comments&postId=${story.redditPostId}&subreddit=${story.subreddit}`);
+      if (res.ok) {
+        const data = await res.json();
+        comments = data.comments || [];
+      }
+    }
+
+    // Disqus comments
+    if (story.externalUrl || story.url) {
+      try {
+        const url = encodeURIComponent(story.externalUrl || story.url);
+        const res = await fetch(`${API}/api/sources/disqus?mode=url&url=${url}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.threadFound) comments.push(...(data.comments || []));
+        }
+      } catch {}
+    }
+
+    if (comments.length === 0) {
+      container.innerHTML = `<div class="empty-state">No comments found for this story.<br><span style="font-size:12px">Comments are available for Reddit posts and Disqus-powered publications.</span></div>`;
+      return;
+    }
+
+    // Claude analysis
+    let analysis = null;
+    try {
+      const res = await fetch(`${API}/api/analyse?mode=comments`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ comments, storyTitle: story.title })
+      });
+      if (res.ok) analysis = await res.json();
+    } catch {}
+
+    renderCommentAnalysis(comments, analysis, story);
+
+  } catch(e) {
+    container.innerHTML = `<div class="error-banner">Failed to load comments: ${e.message}</div>`;
+  }
+}
+
+function renderCommentAnalysis(comments, analysis, story) {
+  const container = document.getElementById('comments-content');
+  const pos = comments.filter(c=>c.sentiment>0.1).length;
+  const neg = comments.filter(c=>c.sentiment<-0.1).length;
+  const neu = comments.length - pos - neg;
+  const pp = Math.round(pos/comments.length*100);
+  const np = Math.round(neu/comments.length*100);
+  const ngp = 100-pp-np;
+
+  container.innerHTML = `
+    <div class="metric-grid">
+      <div class="metric-box"><div class="metric-val">${comments.length}</div><div class="metric-lbl">Total comments</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--red)">${neg}</div><div class="metric-lbl">Hostile</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:var(--green)">${pos}</div><div class="metric-lbl">Supportive</div></div>
+    </div>
+
+    <div class="sentiment-bar" style="height:10px;margin-bottom:8px">
+      <div class="sent-pos" style="width:${pp}%"></div>
+      <div class="sent-neu" style="width:${np}%"></div>
+      <div class="sent-neg" style="width:${ngp}%"></div>
+    </div>
+    <div class="sentiment-legend" style="margin-bottom:16px">
+      <div><span class="sent-dot" style="background:var(--green)"></span>Positive ${pp}%</div>
+      <div><span class="sent-dot" style="background:var(--text3)"></span>Neutral ${np}%</div>
+      <div><span class="sent-dot" style="background:var(--red)"></span>Negative ${ngp}%</div>
+    </div>
+
+    ${analysis ? `
+    <div class="comment-grid">
+      <div class="comment-card">
+        <div class="comment-card-title">AI Theme Analysis</div>
+        <div class="theme-list">
+          ${(analysis.themes||[]).slice(0,5).map(t=>`
+            <div class="theme-item">
+              <div class="theme-name">${t.name}</div>
+              <div class="theme-bar-wrap"><div class="theme-bar" style="width:${t.percentage}%;background:${t.sentiment==='negative'?'var(--red)':t.sentiment==='positive'?'var(--green)':'var(--accent)'}"></div></div>
+              <div class="theme-pct">${t.percentage}%</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="comment-card">
+        <div class="comment-card-title">AI Recommendations</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text2)">${analysis.recommendations || '—'}</div>
+        ${analysis.narrativeRisks?.length ? `<div style="margin-top:10px">${analysis.narrativeRisks.map(r=>`<div style="font-size:12px;padding:4px 0;color:var(--amber)">⚠ ${r}</div>`).join('')}</div>` : ''}
+      </div>
+    </div>` : ''}
+
+    <div class="section-title">Recent Comments</div>
+    <div class="comment-card">
+      ${comments.slice(0,20).map(c=>`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:500;color:var(--accent2)">${c.author}</span>
+            <span class="inf-sent ${c.sentiment>0.1?'sent-pos-badge':c.sentiment<-0.1?'sent-neg-badge':''}">
+              ${c.sentiment>0.1?'Positive':c.sentiment<-0.1?'Negative':'Neutral'}
+            </span>
+            <span style="margin-left:auto;font-size:11px;color:var(--text3)">${c.platform||''}</span>
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:var(--text2)">${c.text?.slice(0,280) || c.body?.slice(0,280)}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ─── DIGEST ───────────────────────────────────────────────────────────
+
+async function generateDigest() {
+  const el = document.getElementById('digest-output');
+  el.innerHTML = '<div class="loading-state"><div class="ai-thinking"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>Generating AI briefing...</div>';
+
+  try {
+    const res = await fetch(`${API}/api/analyse?mode=digest`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        stories: ALL_STORIES,
+        date: new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
+        teamStats: { onShift: TEAM.filter(m=>m.onShift).length, totalMembers: TEAM.length }
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    el.innerHTML = `<div class="digest-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:18px;font-weight:600">Morning Intelligence Briefing</div><div style="font-size:12px;color:var(--text3);font-family:var(--mono)">${new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--text3)">Generated by</div><div style="font-size:13px;font-weight:500;color:var(--accent2)">PulseDesk AI</div></div>
+      </div>
+
+      <div class="digest-section">
+        <div class="digest-section-title">Executive Summary</div>
+        <div class="digest-body">${data.executiveSummary}</div>
+        ${data.topPriority ? `<div class="digest-highlight">⚠️ Top Priority: ${data.topPriority}</div>` : ''}
+      </div>
+
+      <div class="digest-section">
+        <div class="digest-section-title">Sentiment Trend</div>
+        <div class="digest-body"><span style="color:${data.sentimentTrend==='deteriorating'?'var(--red)':data.sentimentTrend==='improving'?'var(--green)':'var(--amber)'}">${data.sentimentTrend?.toUpperCase()}</span> — ${data.sentimentNarrative}</div>
+      </div>
+
+      ${data.keyThemes?.length ? `<div class="digest-section">
+        <div class="digest-section-title">Key Themes</div>
+        ${data.keyThemes.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:500">${t.theme}</div><div style="font-size:12px;color:var(--text3);margin-top:2px">${t.significance}</div></div>`).join('')}
+      </div>` : ''}
+
+      ${data.watchlist?.length ? `<div class="digest-section">
+        <div class="digest-section-title">Watchlist</div>
+        ${data.watchlist.map(w=>`<div style="font-size:13px;padding:4px 0;color:var(--amber)">👁 ${w}</div>`).join('')}
+      </div>` : ''}
+
+      <div class="digest-section">
+        <div class="digest-section-title">Team Priority Today</div>
+        <div class="digest-body">${data.recommendedFocus}</div>
+      </div>
+    </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="error-banner">Digest generation failed: ${e.message}. Ensure ANTHROPIC_API_KEY is set in Vercel environment variables.</div>`;
+  }
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────
+
+function checkNotifications(stories) {
+  const newNotifs = [];
+  for (const s of stories) {
+    if (s.priority === 'P1') {
+      newNotifs.push({ type:'critical', icon:'🔴', title:`P1 Critical: ${s.sourceName}`, body: s.title.slice(0,100), time: 'Just now' });
+    }
+  }
+  if (newNotifs.length) {
+    NOTIFICATIONS = [...newNotifs, ...NOTIFICATIONS].slice(0,50);
+    document.getElementById('badge-notif').style.display = '';
+    document.getElementById('badge-notif').textContent = newNotifs.length;
+    renderNotifications();
+  }
+}
+
+function renderNotifications() {
+  const el = document.getElementById('notif-list');
+  if (!NOTIFICATIONS.length) { el.innerHTML = '<div class="empty-state">No notifications</div>'; return; }
+  el.innerHTML = NOTIFICATIONS.map((n,i) => `
+    <div class="notif-item ${i<3?'unread':''}">
+      <div class="notif-icon" style="background:rgba(232,82,74,0.15)">${n.icon}</div>
+      <div><div style="font-size:13px;font-weight:500">${n.title}</div><div style="font-size:12px;color:var(--text3);margin-top:2px">${n.body}</div></div>
+      <div style="font-size:11px;color:var(--text3);margin-left:auto;flex-shrink:0;font-family:var(--mono)">${n.time}</div>
+    </div>`).join('');
+}
+
+// ─── ENTITIES & TEAM ──────────────────────────────────────────────────
+
+function renderEntityTable() {
+  const entCounts = {};
+  for (const s of ALL_STORIES) for (const e of (s.entities||[])) entCounts[e] = (entCounts[e]||0)+1;
+
+  document.getElementById('entity-tbody').innerHTML = ENTITIES.map(e => `
+    <tr>
+      <td style="font-weight:500">${e.name}</td>
+      <td><span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;background:${e.type==='company'?'rgba(91,106,240,0.2)':e.type==='person'?'rgba(46,196,182,0.2)':'rgba(232,162,58,0.2)'};color:${e.type==='company'?'var(--accent2)':e.type==='person'?'var(--teal)':'var(--amber)'}">${e.type}</span></td>
+      <td>${'★'.repeat(e.importance||1)}${'☆'.repeat(5-(e.importance||1))}</td>
+      <td style="font-family:var(--mono)">${entCounts[e.name]||0}</td>
+      <td><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:${e.active?'rgba(61,201,122,0.15)':'var(--bg4)'};color:${e.active?'var(--green)':'var(--text3)'}">${e.active?'Active':'Paused'}</span></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">No entities. <a href="/settings" style="color:var(--accent2)">Add entities in Settings →</a></td></tr>';
+}
+
+function renderTeam() {
+  const el = document.getElementById('team-grid');
+  if (!el) return;
+  const colors = ['#534AB7','#0F6E56','#993C1D','#185FA5','#3B6D11','#854F0B','#993556','#0C447C'];
+
+  // Check shift status
+  const now = new Date();
+  const nowMins = now.getHours()*60+now.getMinutes();
+
+  el.innerHTML = TEAM.map((m,i) => {
+    let onShift = m.onShift || false;
+    if (m.shiftStart && m.shiftEnd) {
+      const [sh,sm] = m.shiftStart.split(':').map(Number);
+      const [eh,em] = m.shiftEnd.split(':').map(Number);
+      const startMins = sh*60+sm, endMins = eh*60+em;
+      onShift = endMins>startMins ? nowMins>=startMins && nowMins<endMins : nowMins>=startMins||nowMins<endMins;
+    }
+    const initials = m.name.split(' ').map(x=>x[0]).join('');
+    const assigned = ALL_STORIES.filter(s=>s._assigned?.id===m.id).length;
+
+    return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:40px;height:40px;border-radius:50%;background:${colors[i%colors.length]};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">${initials}</div>
+        <div>
+          <div style="font-size:14px;font-weight:500">${m.name}</div>
+          <div style="font-size:11px;color:var(--text3)">${m.shiftStart||'—'}–${m.shiftEnd||'—'}</div>
+        </div>
+        <span style="margin-left:auto;font-size:11px;padding:3px 8px;border-radius:4px;background:${onShift?'rgba(61,201,122,0.15)':'var(--bg4)'};color:${onShift?'var(--green)':'var(--text3)'}">${onShift?'On shift':'Off'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--bg3);border-radius:8px;padding:8px 10px"><div style="font-size:18px;font-weight:600;font-family:var(--mono)">${assigned}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Assigned</div></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:8px 10px"><div style="font-size:14px;font-weight:500;margin-top:2px">${m.role?.replace('_',' ')||'Analyst'}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Role</div></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1">No team members. <a href="/settings" style="color:var(--accent2)">Add team in Settings →</a></div>';
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name==='entities') renderEntityTable();
+  if (name==='team') renderTeam();
+  if (name==='notifications') { document.getElementById('badge-notif').style.display='none'; renderNotifications(); }
+}
+
+function overridePriority(id) {
+  const s = ALL_STORIES.find(x=>x.id===id);
+  if (!s) return;
+  const opts = ['P1','P2','P3'].filter(p=>p!==s.priority);
+  const chosen = prompt(`Override priority (current: ${s.priority})?\nEnter: ${opts.join(' or ')}`);
+  if (opts.includes(chosen?.toUpperCase())) {
+    s.priority = chosen.toUpperCase();
+    selectStory(id);
+    renderAllStories();
+    renderDashboardStories();
+  }
+}
+
+function exportPDF() {
+  alert('PDF export will be available in the full backend version. For now, use Ctrl+P / Cmd+P to print this page.');
+}
+
+// ─── START ────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

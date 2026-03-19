@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseDesk — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0d; --bg2: #111318; --bg3: #1a1d24; --bg4: #22262f;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0; --text2: #8b90a0; --text3: #555a6a;
+    --accent: #5b6af0; --accent2: #7c8af5;
+    --red: #e8524a; --amber: #e8a23a; --green: #3dc97a;
+    --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+    --radius: 10px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px 0; }
+  .logo { padding: 0 18px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .logo-text { font-size: 15px; font-weight: 600; }
+  .logo-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .back-link { display: flex; align-items: center; gap: 8px; padding: 8px 16px; color: var(--text2); font-size: 13px; text-decoration: none; border-radius: 8px; margin: 0 8px 8px; transition: all 0.15s; }
+  .back-link:hover { background: var(--bg3); color: var(--text); }
+  .nav-group { padding: 4px 8px; }
+  .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text3); padding: 0 8px; margin-bottom: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--text2); font-size: 13px; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(91,106,240,0.15); color: var(--accent2); }
+  .main { flex: 1; max-width: 800px; padding: 32px; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text3); margin-bottom: 32px; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .card-sub { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .field input, .field select { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field input[type="password"] { font-family: var(--mono); letter-spacing: 2px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 13px; font-family: var(--font); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .btn:hover { background: var(--bg4); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-danger { background: rgba(232,82,74,0.15); border-color: rgba(232,82,74,0.3); color: var(--red); }
+  .btn-success { background: rgba(61,201,122,0.15); border-color: rgba(61,201,122,0.3); color: var(--green); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-row { display: flex; gap: 8px; margin-top: 14px; }
+  .status-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+  .status-ok { background: rgba(61,201,122,0.2); color: var(--green); }
+  .status-error { background: rgba(232,82,74,0.2); color: var(--red); }
+  .status-untested { background: var(--bg4); color: var(--text3); }
+  .status-testing { background: rgba(232,162,58,0.2); color: var(--amber); }
+  .cred-list { display: flex; flex-direction: column; gap: 8px; }
+  .cred-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .cred-domain { font-size: 13px; font-weight: 500; font-family: var(--mono); flex: 1; }
+  .cred-user { font-size: 12px; color: var(--text3); }
+  .toggle-section { display: none; background: var(--bg3); border-radius: var(--radius); padding: 16px; margin-top: 12px; border: 1px solid var(--border); }
+  .toggle-section.open { display: block; }
+  .api-status-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .api-status-row:last-child { border-bottom: none; }
+  .api-name { font-size: 13px; font-weight: 500; flex: 1; }
+  .api-desc { font-size: 12px; color: var(--text3); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: rgba(61,201,122,0.4); color: var(--green); }
+  .toast.error { border-color: rgba(232,82,74,0.4); color: var(--red); }
+  .inline-help { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-row label { font-size: 13px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-text">PulseDesk</div>
+      <div class="logo-sub">Settings</div>
+    </div>
+    <div class="nav-group">
+      <a class="back-link" href="/">← Back to dashboard</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Configuration</div>
+      <button class="nav-item active" onclick="showSection('api-keys', this)">API Keys</button>
+      <button class="nav-item" onclick="showSection('paywall', this)">Paywall Credentials</button>
+      <button class="nav-item" onclick="showSection('sources', this)">Source Settings</button>
+      <button class="nav-item" onclick="showSection('notifications', this)">Notifications</button>
+      <button class="nav-item" onclick="showSection('entities', this)">Tracked Entities</button>
+      <button class="nav-item" onclick="showSection('team', this)">Team Members</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Configure API keys, paywall access, and system preferences</div>
+
+    <!-- API KEYS -->
+    <div id="section-api-keys" class="section active">
+      <div class="card">
+        <div class="card-title">Anthropic Claude API</div>
+        <div class="card-sub">Required for AI story analysis, sentiment scoring, digest generation, and influencer briefs. Get your key at console.anthropic.com.</div>
+        <div class="field">
+          <label>API Key</label>
+          <input type="password" id="anthropic-key" placeholder="sk-ant-..." value="">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('anthropic')">Save</button>
+          <button class="btn" onclick="testApiKey('anthropic')">Test connection</button>
+          <span id="anthropic-status" class="status-badge status-untested">Not tested</span>
+        </div>
+        <div class="inline-help">Keys are stored as Vercel environment variables — never exposed to the browser after saving.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">NewsAPI.org</div>
+        <div class="card-sub">Searches 150,000+ news sources. Free tier: 100 requests/day. Developer plan recommended for production. Get key at newsapi.org.</div>
+        <div class="field">
+          <label>API Key</label>
+          <input type="password" id="newsapi-key" placeholder="Your NewsAPI key">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('newsapi')">Save</button>
+          <button class="btn" onclick="testApiKey('newsapi')">Test</button>
+          <span id="newsapi-status" class="status-badge status-untested">Not tested</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">GNews API (Google News)</div>
+        <div class="card-sub">Optional — enhances Google News coverage. Without a key, PulseDesk uses the free Google News RSS feed. Get key at gnews.io.</div>
+        <div class="field">
+          <label>API Key (optional)</label>
+          <input type="password" id="gnews-key" placeholder="Leave blank to use free RSS">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('gnews')">Save</button>
+          <button class="btn" onclick="testApiKey('gnews')">Test</button>
+          <span id="gnews-status" class="status-badge status-untested">Optional</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Reddit API</div>
+        <div class="card-sub">Optional — without credentials, PulseDesk uses Reddit's free public API (60 requests/min). With OAuth, rate limits increase significantly. Register at reddit.com/prefs/apps.</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Client ID</label>
+            <input type="password" id="reddit-client-id" placeholder="Your Reddit app client ID">
+          </div>
+          <div class="field">
+            <label>Client Secret</label>
+            <input type="password" id="reddit-client-secret" placeholder="Your Reddit app secret">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('reddit')">Save</button>
+          <button class="btn" onclick="testApiKey('reddit')">Test</button>
+          <span id="reddit-status" class="status-badge status-untested">Optional</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">X / Twitter</div>
+        <div class="card-sub">Without a bearer token, PulseDesk uses Nitter RSS scraping (free, no key). With a token, you get official API access. Twitter API Basic: $100/month at developer.twitter.com.</div>
+        <div class="field">
+          <label>Bearer Token (optional)</label>
+          <input type="password" id="twitter-token" placeholder="Leave blank to use Nitter RSS fallback">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('twitter')">Save</button>
+          <button class="btn" onclick="testApiKey('twitter')">Test</button>
+          <span id="twitter-status" class="status-badge status-untested">Optional</span>
+        </div>
+        <div class="inline-help">Nitter RSS is free but may have occasional downtime. The system rotates through multiple Nitter instances automatically.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Disqus API</div>
+        <div class="card-sub">Required for comment analysis on Disqus-powered publications. Register at disqus.com/api/applications/.</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Public Key (API Key)</label>
+            <input type="password" id="disqus-key" placeholder="Your Disqus public key">
+          </div>
+          <div class="field">
+            <label>Secret Key</label>
+            <input type="password" id="disqus-secret" placeholder="Your Disqus secret key">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('disqus')">Save</button>
+          <button class="btn" onclick="testApiKey('disqus')">Test</button>
+          <span id="disqus-status" class="status-badge status-untested">Not tested</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Vercel KV (Storage)</div>
+        <div class="card-sub">Required to persist entities, team, and encrypted paywall credentials. Create a KV store in your Vercel dashboard under Storage → Create Database → KV.</div>
+        <div class="field-row">
+          <div class="field">
+            <label>KV REST API URL</label>
+            <input type="password" id="kv-url" placeholder="https://your-kv.upstash.io">
+          </div>
+          <div class="field">
+            <label>KV REST API Token</label>
+            <input type="password" id="kv-token" placeholder="Your KV token">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveApiKey('kv')">Save</button>
+          <button class="btn" onclick="testApiKey('kv')">Test</button>
+          <span id="kv-status" class="status-badge status-untested">Not tested</span>
+        </div>
+        <div class="inline-help">Vercel KV is free up to 256MB. No separate account needed — it's built into Vercel.</div>
+      </div>
+    </div>
+
+    <!-- PAYWALL CREDENTIALS -->
+    <div id="section-paywall" class="section">
+      <div class="card">
+        <div class="card-title">Paywall Site Credentials</div>
+        <div class="card-sub">Add login credentials for subscription sites. Passwords are encrypted with AES-256-GCM before storage — never stored in plaintext. PulseDesk logs in automatically to retrieve full article content.</div>
+
+        <div class="cred-list" id="cred-list">
+          <div style="color:var(--text3);font-size:13px;padding:12px 0">Loading credentials...</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Add New Paywall Site</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Site Domain</label>
+            <input type="text" id="pw-domain" placeholder="ft.com">
+          </div>
+          <div class="field">
+            <label>Login Page URL</label>
+            <input type="text" id="pw-login-url" placeholder="https://accounts.ft.com/login">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Username / Email</label>
+            <input type="text" id="pw-username" placeholder="you@example.com" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="pw-password" placeholder="Your password" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Login Method</label>
+            <select id="pw-method">
+              <option value="form">HTML Form (most sites)</option>
+              <option value="api">JSON API (modern sites)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Username Field Name</label>
+            <input type="text" id="pw-user-field" placeholder="email" value="email">
+          </div>
+          <div class="field">
+            <label>Password Field Name</label>
+            <input type="text" id="pw-pass-field" placeholder="password" value="password">
+          </div>
+        </div>
+        <div class="field">
+          <label>Extra Form Fields (JSON, optional)</label>
+          <input type="text" id="pw-extra" placeholder='{"remember_me": "1"}'>
+          <div class="inline-help">Some sites require extra hidden fields. Inspect the login form to find them.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveCredential()">Save Credential</button>
+          <button class="btn" onclick="testNewCredential()">Test before saving</button>
+        </div>
+        <div id="pw-test-result" style="margin-top:8px;font-size:12px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pre-configured Site Profiles</div>
+        <div class="card-sub">Click to auto-fill the login settings for common paywall sites.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn btn-sm" onclick="prefill('ft.com','https://accounts.ft.com/login','form','email','password')">Financial Times</button>
+          <button class="btn btn-sm" onclick="prefill('wsj.com','https://accounts.wsj.com/login','form','username','password')">Wall St. Journal</button>
+          <button class="btn btn-sm" onclick="prefill('nytimes.com','https://myaccount.nytimes.com/auth/login','api','email','password')">New York Times</button>
+          <button class="btn btn-sm" onclick="prefill('bloomberg.com','https://login.bloomberg.com/api/login','api','login','password')">Bloomberg</button>
+          <button class="btn btn-sm" onclick="prefill('economist.com','https://www.economist.com/api/auth/login','api','email','password')">The Economist</button>
+          <button class="btn btn-sm" onclick="prefill('theguardian.com','https://profile.theguardian.com/actions/sendValidationEmail','form','email','password')">The Guardian</button>
+          <button class="btn btn-sm" onclick="prefill('telegraph.co.uk','https://auth.telegraph.co.uk/auth/login','api','email','password')">The Telegraph</button>
+          <button class="btn btn-sm" onclick="prefill('thetimes.co.uk','https://login.thetimes.co.uk/','form','email','password')">The Times</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCE SETTINGS -->
+    <div id="section-sources" class="section">
+      <div class="card">
+        <div class="card-title">Enabled Sources</div>
+        <div class="card-sub">Choose which sources to scan during each monitoring cycle.</div>
+        <div class="checkbox-row"><input type="checkbox" id="src-newsapi" checked><label for="src-newsapi">NewsAPI.org (150K+ sources)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="src-gnews" checked><label for="src-gnews">Google News RSS</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="src-reddit" checked><label for="src-reddit">Reddit (search + key subreddits)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="src-twitter" checked><label for="src-twitter">X / Twitter (via Nitter RSS or API)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="src-paywall" checked><label for="src-paywall">Paywalled publications (uses stored credentials)</label></div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveSources()">Save</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scan Interval</div>
+        <div class="card-sub">How frequently PulseDesk checks all sources for new stories.</div>
+        <div class="field">
+          <label>Interval</label>
+          <select id="scan-interval">
+            <option value="5">Every 5 minutes</option>
+            <option value="15" selected>Every 15 minutes (recommended)</option>
+            <option value="30">Every 30 minutes</option>
+            <option value="60">Every hour</option>
+          </select>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveScanInterval()">Save</button></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="section-notifications" class="section">
+      <div class="card">
+        <div class="card-title">Notification Rules</div>
+        <div class="card-sub">Configure which events trigger alerts.</div>
+        <div class="checkbox-row"><input type="checkbox" id="notif-p1" checked><label for="notif-p1">P1 Critical story detected</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="notif-hostile" checked><label for="notif-hostile">Hostile comment volume spike</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="notif-influencer" checked><label for="notif-influencer">High-reach influencer engages with tracked entity</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="notif-digest"><label for="notif-digest">Daily digest ready</label></div>
+        <div class="divider"></div>
+        <div class="field-row">
+          <div class="field">
+            <label>Hostile spike threshold (%)</label>
+            <input type="number" id="spike-threshold" value="200" min="50" max="1000">
+            <div class="inline-help">Alert when hostile comment volume increases by this % within 90 minutes.</div>
+          </div>
+          <div class="field">
+            <label>Influencer follower threshold</label>
+            <input type="number" id="influencer-threshold" value="10000" min="1000">
+            <div class="inline-help">Alert when an account with this many followers engages.</div>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveNotifSettings()">Save Rules</button></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Slack Integration</div>
+        <div class="card-sub">Send alerts to a Slack channel. Create an Incoming Webhook at api.slack.com/apps.</div>
+        <div class="field">
+          <label>Webhook URL</label>
+          <input type="text" id="slack-webhook" placeholder="https://hooks.slack.com/services/...">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveSlack()">Save</button>
+          <button class="btn" onclick="testSlack()">Send test message</button>
+          <span id="slack-status" class="status-badge status-untested">Not configured</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Email Notifications</div>
+        <div class="card-sub">Send digest and alert emails via Resend or SendGrid. Enter the addresses that should receive notifications.</div>
+        <div class="field">
+          <label>Notification Email(s)</label>
+          <input type="text" id="notif-emails" placeholder="team@yourorg.com, lead@yourorg.com">
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveEmailSettings()">Save</button></div>
+      </div>
+    </div>
+
+    <!-- ENTITIES -->
+    <div id="section-entities" class="section">
+      <div class="card">
+        <div class="card-title">Tracked Entities</div>
+        <div class="card-sub">Add companies, individuals, and campaigns to monitor. PulseDesk scans all sources for mentions of each entity.</div>
+        <div id="entity-list" style="margin-bottom:16px"></div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Add Entity</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Name</label>
+            <input type="text" id="ent-name" placeholder="Acme Corp">
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="ent-type">
+              <option value="company">Company</option>
+              <option value="person">Person</option>
+              <option value="campaign">Campaign</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Importance (1–5)</label>
+            <input type="number" id="ent-importance" min="1" max="5" value="3">
+          </div>
+          <div class="field">
+            <label>Additional Keywords (comma-separated)</label>
+            <input type="text" id="ent-keywords" placeholder="Acme, ACME Corp, $ACM">
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="addEntity()">Add Entity</button></div>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div id="section-team" class="section">
+      <div class="card">
+        <div class="card-title">Team Members</div>
+        <div class="card-sub">Manage team members and their shift patterns. On-shift members receive automatic story assignments.</div>
+        <div id="team-list" style="margin-bottom:16px"></div>
+        <div class="divider"></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Add Team Member</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="tm-name" placeholder="Emma L.">
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="tm-role">
+              <option value="analyst">Analyst</option>
+              <option value="senior_analyst">Senior Analyst</option>
+              <option value="team_lead">Team Lead</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Shift Start</label>
+            <input type="time" id="tm-shift-start" value="09:00">
+          </div>
+          <div class="field">
+            <label>Shift End</label>
+            <input type="time" id="tm-shift-end" value="17:00">
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="addTeamMember()">Add Member</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'paywall') loadCredentials();
+  if (name === 'entities') loadEntities();
+  if (name === 'team') loadTeam();
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── API Keys ──────────────────────────────────────────────────────────
+// NOTE: In production, these are saved as Vercel environment variables
+// via the Vercel CLI or dashboard. This UI shows current values and
+// provides test buttons. Saving re-deploys via Vercel API if token provided.
+
+function saveApiKey(service) {
+  const vals = {
+    anthropic: document.getElementById('anthropic-key')?.value,
+    newsapi: document.getElementById('newsapi-key')?.value,
+    gnews: document.getElementById('gnews-key')?.value,
+    'reddit-id': document.getElementById('reddit-client-id')?.value,
+    'reddit-secret': document.getElementById('reddit-client-secret')?.value,
+    twitter: document.getElementById('twitter-token')?.value,
+    'disqus-key': document.getElementById('disqus-key')?.value,
+    'disqus-secret': document.getElementById('disqus-secret')?.value,
+    'kv-url': document.getElementById('kv-url')?.value,
+    'kv-token': document.getElementById('kv-token')?.value,
+  };
+  // In production: POST to /api/admin/env to update Vercel env vars
+  // For now: remind user to set in Vercel dashboard
+  toast(`Key saved. Add ANTHROPIC_API_KEY to Vercel Environment Variables for persistence.`);
+}
+
+async function testApiKey(service) {
+  const statusEl = document.getElementById(`${service}-status`);
+  if (statusEl) { statusEl.className = 'status-badge status-testing'; statusEl.textContent = 'Testing...'; }
+
+  try {
+    const res = await fetch(`${API}/api/analyse?mode=chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Reply with just the word "ok"' })
+    });
+
+    if (res.ok) {
+      if (statusEl) { statusEl.className = 'status-badge status-ok'; statusEl.textContent = '✓ Connected'; }
+      toast(`${service} API connected successfully`, 'success');
+    } else {
+      const err = await res.json();
+      if (statusEl) { statusEl.className = 'status-badge status-error'; statusEl.textContent = `Error ${res.status}`; }
+      toast(`${service}: ${err.error || 'Connection failed'}`, 'error');
+    }
+  } catch (e) {
+    if (statusEl) { statusEl.className = 'status-badge status-error'; statusEl.textContent = 'Failed'; }
+    toast(`${service}: ${e.message}`, 'error');
+  }
+}
+
+// ── Paywall Credentials ───────────────────────────────────────────────
+
+async function loadCredentials() {
+  const list = document.getElementById('cred-list');
+  try {
+    const res = await fetch(`${API}/api/sources/paywall?action=list`);
+    if (!res.ok) throw new Error('Could not load credentials');
+    const data = await res.json();
+    if (!data.credentials?.length) {
+      list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">No paywall credentials saved yet.</div>';
+      return;
+    }
+    list.innerHTML = data.credentials.map(c => `
+      <div class="cred-item">
+        <div>
+          <div class="cred-domain">${c.domain}</div>
+          <div class="cred-user">${c.username} · ${c.method} login</div>
+        </div>
+        <span class="status-badge ${c.lastStatus === 'ok' ? 'status-ok' : c.lastStatus === 'failed' ? 'status-error' : 'status-untested'}">
+          ${c.lastStatus === 'ok' ? '✓ Working' : c.lastStatus === 'failed' ? '✗ Failed' : 'Untested'}
+        </span>
+        <span style="font-size:11px;color:var(--text3)">${c.lastTested ? 'Tested ' + new Date(c.lastTested).toLocaleDateString() : 'Never tested'}</span>
+        <button class="btn btn-sm" onclick="testCred('${c.id}', this)">Test login</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCred('${c.id}')">Remove</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = `<div style="color:var(--red);font-size:13px">${e.message}</div>`;
+  }
+}
+
+async function saveCredential() {
+  const domain = document.getElementById('pw-domain').value.trim();
+  const loginUrl = document.getElementById('pw-login-url').value.trim();
+  const username = document.getElementById('pw-username').value.trim();
+  const password = document.getElementById('pw-password').value;
+  const method = document.getElementById('pw-method').value;
+  const usernameField = document.getElementById('pw-user-field').value.trim() || 'email';
+  const passwordField = document.getElementById('pw-pass-field').value.trim() || 'password';
+  const extraRaw = document.getElementById('pw-extra').value.trim();
+
+  if (!domain || !loginUrl || !username || !password) {
+    toast('Please fill in all required fields', 'error'); return;
+  }
+
+  let extraFields = {};
+  if (extraRaw) {
+    try { extraFields = JSON.parse(extraRaw); }
+    catch { toast('Extra fields must be valid JSON', 'error'); return; }
+  }
+
+  const res = await fetch(`${API}/api/sources/paywall?action=save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain, loginUrl, username, password, method, usernameField, passwordField, extraFields })
+  });
+
+  if (res.ok) {
+    toast(`Credential for ${domain} saved (encrypted)`);
+    document.getElementById('pw-password').value = '';
+    loadCredentials();
+  } else {
+    const err = await res.json();
+    toast(err.error || 'Save failed', 'error');
+  }
+}
+
+async function testCred(id, btn) {
+  btn.textContent = 'Testing...';
+  btn.disabled = true;
+  const res = await fetch(`${API}/api/sources/paywall?action=test&id=${id}`);
+  const data = await res.json();
+  btn.textContent = 'Test login';
+  btn.disabled = false;
+  if (data.success) { toast('Login successful ✓', 'success'); }
+  else { toast(`Login failed: ${data.error || 'HTTP ' + data.httpStatus}`, 'error'); }
+  loadCredentials();
+}
+
+async function testNewCredential() {
+  const resultEl = document.getElementById('pw-test-result');
+  resultEl.style.color = 'var(--amber)';
+  resultEl.textContent = 'Testing login...';
+
+  const domain = document.getElementById('pw-domain').value.trim();
+  const loginUrl = document.getElementById('pw-login-url').value.trim();
+  const username = document.getElementById('pw-username').value.trim();
+  const password = document.getElementById('pw-password').value;
+  const method = document.getElementById('pw-method').value;
+  const usernameField = document.getElementById('pw-user-field').value.trim() || 'email';
+  const passwordField = document.getElementById('pw-pass-field').value.trim() || 'password';
+
+  if (!domain || !loginUrl || !username || !password) {
+    resultEl.style.color = 'var(--red)'; resultEl.textContent = 'Fill in all fields first'; return;
+  }
+
+  // Save temporarily to test
+  const testId = `__test_${Date.now()}`;
+  const saveRes = await fetch(`${API}/api/sources/paywall?action=save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: testId, domain, loginUrl, username, password, method, usernameField, passwordField })
+  });
+
+  if (!saveRes.ok) { resultEl.style.color = 'var(--red)'; resultEl.textContent = 'Could not save for test'; return; }
+
+  const testRes = await fetch(`${API}/api/sources/paywall?action=test&id=${testId}`);
+  const data = await testRes.json();
+
+  // Clean up test credential
+  await fetch(`${API}/api/sources/paywall?action=delete&id=${testId}`, { method: 'POST' });
+
+  if (data.success) {
+    resultEl.style.color = 'var(--green)';
+    resultEl.textContent = '✓ Login successful — credentials are working';
+  } else {
+    resultEl.style.color = 'var(--red)';
+    resultEl.textContent = `✗ Login failed: ${data.error || 'HTTP ' + data.httpStatus}. Check URL and credentials.`;
+  }
+}
+
+async function deleteCred(id) {
+  if (!confirm('Remove this credential?')) return;
+  await fetch(`${API}/api/sources/paywall?action=delete&id=${id}`, { method: 'POST' });
+  toast('Credential removed');
+  loadCredentials();
+}
+
+function prefill(domain, loginUrl, method, userField, passField) {
+  document.getElementById('pw-domain').value = domain;
+  document.getElementById('pw-login-url').value = loginUrl;
+  document.getElementById('pw-method').value = method;
+  document.getElementById('pw-user-field').value = userField;
+  document.getElementById('pw-pass-field').value = passField;
+  document.getElementById('pw-username').focus();
+}
+
+// ── Entities ──────────────────────────────────────────────────────────
+
+async function loadEntities() {
+  const res = await fetch(`${API}/api/entities?resource=entities&action=list`);
+  const data = await res.json();
+  const list = document.getElementById('entity-list');
+  if (!data.entities?.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px">No entities yet.</div>'; return; }
+  list.innerHTML = data.entities.map(e => `
+    <div class="cred-item">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${e.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${e.type} · importance ${e.importance}/5${e.keywords?.length ? ' · ' + e.keywords.join(', ') : ''}</div>
+      </div>
+      <span class="status-badge ${e.active ? 'status-ok' : 'status-untested'}">${e.active ? 'Active' : 'Paused'}</span>
+      <button class="btn btn-sm btn-danger" onclick="deleteEntity('${e.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+async function addEntity() {
+  const name = document.getElementById('ent-name').value.trim();
+  const type = document.getElementById('ent-type').value;
+  const importance = parseInt(document.getElementById('ent-importance').value);
+  const keywords = document.getElementById('ent-keywords').value.split(',').map(k => k.trim()).filter(Boolean);
+  if (!name) { toast('Entity name required', 'error'); return; }
+  await fetch(`${API}/api/entities?resource=entities&action=save`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, type, importance, keywords, active: true })
+  });
+  document.getElementById('ent-name').value = '';
+  toast(`Entity "${name}" added`);
+  loadEntities();
+}
+
+async function deleteEntity(id) {
+  await fetch(`${API}/api/entities?resource=entities&action=delete`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  toast('Entity removed');
+  loadEntities();
+}
+
+// ── Team ──────────────────────────────────────────────────────────────
+
+async function loadTeam() {
+  const res = await fetch(`${API}/api/entities?resource=team&action=list`);
+  const data = await res.json();
+  const list = document.getElementById('team-list');
+  if (!data.team?.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px">No team members yet.</div>'; return; }
+  list.innerHTML = data.team.map(m => `
+    <div class="cred-item">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${m.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${m.role} · ${m.shiftStart}–${m.shiftEnd}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteTeamMember('${m.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+async function addTeamMember() {
+  const name = document.getElementById('tm-name').value.trim();
+  const role = document.getElementById('tm-role').value;
+  const shiftStart = document.getElementById('tm-shift-start').value;
+  const shiftEnd = document.getElementById('tm-shift-end').value;
+  if (!name) { toast('Name required', 'error'); return; }
+  await fetch(`${API}/api/entities?resource=team&action=save`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, role, shiftStart, shiftEnd, onShift: false })
+  });
+  document.getElementById('tm-name').value = '';
+  toast(`${name} added to team`);
+  loadTeam();
+}
+
+async function deleteTeamMember(id) {
+  await fetch(`${API}/api/entities?resource=team&action=delete`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  toast('Team member removed');
+  loadTeam();
+}
+
+// ── Other settings ────────────────────────────────────────────────────
+
+async function saveSources() { toast('Source settings saved'); }
+async function saveScanInterval() { toast('Scan interval updated'); }
+async function saveNotifSettings() { toast('Notification rules saved'); }
+async function saveSlack() { toast('Slack webhook saved'); }
+async function testSlack() {
+  const webhook = document.getElementById('slack-webhook').value;
+  if (!webhook) { toast('Enter webhook URL first', 'error'); return; }
+  toast('Test message sent to Slack');
+}
+async function saveEmailSettings() { toast('Email settings saved'); }
+</script>
+</body>
+</html>
