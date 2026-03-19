@@ -4,7 +4,7 @@
 import { kvGet, kvSet, kvDel, kvList } from '../lib/crypto.js';
 import { jsonResponse, errorResponse, corsHeaders } from '../lib/scoring.js';
 
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const ENTITIES_KEY = 'config:entities';
 const TEAM_KEY = 'config:team';
