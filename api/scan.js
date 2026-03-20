@@ -1,5 +1,5 @@
 // api/scan.js
-// Master scan endpoint — fetches from all sources, deduplicates, scores, returns unified story list
+// Optimised for Vercel free plan (10s limit)
 
 import { jsonResponse, errorResponse, corsHeaders } from '../lib/scoring.js';
 
@@ -10,14 +10,18 @@ const BASE = (req) => {
   return `${url.protocol}//${url.host}`;
 };
 
-async function fetchSource(url) {
+async function fetchSource(url, timeoutMs = 4000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
     if (!res.ok) return { stories: [], error: `HTTP ${res.status}` };
     const data = await res.json();
     return { stories: data.stories || [], source: data.source, count: data.count };
   } catch (e) {
-    return { stories: [], error: e.message };
+    clearTimeout(timer);
+    return { stories: [], error: e.name === 'AbortError' ? 'timeout' : e.message };
   }
 }
 
@@ -28,18 +32,17 @@ export default async function handler(req) {
     const { searchParams } = new URL(req.url);
     const entitiesParam = searchParams.get('entities') || '[]';
     const highImportanceParam = searchParams.get('highImportance') || '[]';
-    const sourcesParam = searchParams.get('sources') || 'newsapi,gnews,reddit,twitter';
+    const sourcesParam = searchParams.get('sources') || 'newsapi,gnews';
     const sources = sourcesParam.split(',');
 
     const base = BASE(req);
     const entityQ = `entities=${encodeURIComponent(entitiesParam)}&highImportance=${encodeURIComponent(highImportanceParam)}`;
 
-    // Fetch all enabled sources in parallel
     const fetches = [];
-    if (sources.includes('newsapi')) fetches.push(fetchSource(`${base}/api/sources/newsapi?${entityQ}`));
-    if (sources.includes('gnews')) fetches.push(fetchSource(`${base}/api/sources/gnews?${entityQ}`));
-    if (sources.includes('reddit')) fetches.push(fetchSource(`${base}/api/sources/reddit?${entityQ}`));
-    if (sources.includes('twitter')) fetches.push(fetchSource(`${base}/api/sources/twitter?${entityQ}`));
+    if (sources.includes('newsapi')) fetches.push(fetchSource(`${base}/api/sources/newsapi?${entityQ}`, 4000));
+    if (sources.includes('gnews'))   fetches.push(fetchSource(`${base}/api/sources/gnews?${entityQ}`, 4000));
+    if (sources.includes('reddit'))  fetches.push(fetchSource(`${base}/api/sources/reddit?${entityQ}`, 4000));
+    if (sources.includes('twitter')) fetches.push(fetchSource(`${base}/api/sources/twitter?${entityQ}`, 4000));
 
     const results = await Promise.allSettled(fetches);
     const allStories = [];
@@ -53,7 +56,6 @@ export default async function handler(req) {
       }
     }
 
-    // Deduplicate by URL and title similarity
     const seen = new Set();
     const deduped = allStories.filter(story => {
       const key = story.url || story.title?.slice(0, 50);
@@ -62,7 +64,6 @@ export default async function handler(req) {
       return true;
     });
 
-    // Sort: P1 first, then by score desc, then by publishedAt desc
     deduped.sort((a, b) => {
       const pMap = { P1: 3, P2: 2, P3: 1 };
       const pd = (pMap[b.priority] || 0) - (pMap[a.priority] || 0);
