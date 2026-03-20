@@ -1,0 +1,16 @@
+{
+  "name": "pulsedesk",
+  "version": "1.0.0",
+  "description": "PulseDesk Media Intelligence Platform",
+  "scripts": {
+    "build": "echo 'Static build complete'"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "rss-parser": "^3.13.0",
+    "cheerio": "^1.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
